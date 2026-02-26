@@ -1,22 +1,20 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.SqlServer;
+
 using InternetShop.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Get Connection String
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-// 2. SWAP: Change from UseSqlite to UseSqlServer
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+builder.Services.AddDatabaseDeveloperPageExceptionFilter(); // dev-only
 
-// 3. IDENTITY SETUP: 
-// Set RequireConfirmedAccount to false so you can actually log in during development 
-// without setting up an SMTP/Email server.
+
 builder.Services.AddDefaultIdentity<IdentityUser>(options => {
     options.SignIn.RequireConfirmedAccount = false;
     options.Password.RequireDigit = false;
@@ -28,21 +26,18 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => {
 
 builder.Services.AddRazorPages();
 
-// 4. ADD CUSTOM SERVICES:
-// Register an HttpClient for your CoinGecko integration later
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
-// 5. DATABASE AUTO-MIGRATION (Optional but handy for Docker)
-// This ensures the DB is updated whenever the app starts.
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    // db.Database.Migrate(); // Uncomment this if you want auto-migrations on startup
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<ApplicationDbContext>();
+    DbInitializer.Initialize(context); // Initialize Db
 }
 
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -54,7 +49,7 @@ else
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles(); // Note: Replaced MapStaticAssets for standard Bootstrap support
+app.UseStaticFiles(); 
 
 app.UseRouting();
 
