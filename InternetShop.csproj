@@ -20,4 +20,8 @@
     <PackageReference Include="Nethereum.Web3" Version="5.8.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>
