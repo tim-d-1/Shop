@@ -74,6 +74,10 @@
               "target": "Package",
               "version": "[9.0.11, )"
             },
+            "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
             "Nethereum.Web3": {
               "target": "Package",
               "version": "[5.8.0, )"
