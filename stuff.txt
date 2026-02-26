@@ -1,0 +1,4 @@
+dotnet ef database update
+docker-compose up -d
+dotnet watch run
+dotnet aspnet-codegenerator razorpage -m Product -dc ApplicationDbContext -udl -outDir Pages/Admin/Products --referenceScriptLibraries
