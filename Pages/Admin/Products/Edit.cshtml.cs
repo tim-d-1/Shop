@@ -1,16 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using InternetShop.Data;
+using InternetShop.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using InternetShop.Data;
-using InternetShop.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace InternetShop.Pages_Admin_Products
 {
+    [Authorize(Roles = "Admin")]
     public class EditModel : PageModel
     {
         private readonly InternetShop.Data.ApplicationDbContext _context;
