@@ -1,19 +1,27 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using InternetShop.Data;
+using InternetShop.Models;
 
-namespace InternetShop.Pages;
-
-public class IndexModel : PageModel
+namespace InternetShop.Pages
 {
-    private readonly ILogger<IndexModel> _logger;
-
-    public IndexModel(ILogger<IndexModel> logger)
+    public class IndexModel : PageModel
     {
-        _logger = logger;
-    }
+        private readonly ApplicationDbContext _context;
 
-    public void OnGet()
-    {
+        public IndexModel(ApplicationDbContext context)
+        {
+            _context = context;
+        }
 
+        public IList<Product> Products { get; set; } = default!;
+
+        public async Task OnGetAsync()
+        {
+            if (_context.Products != null)
+            {
+                Products = await _context.Products.ToListAsync();
+            }
+        }
     }
 }

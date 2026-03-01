@@ -1,3 +1,16 @@
 .vs/
 bin/
 obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.db
+*.sqlite
+appsettings.Local.json
+.env
+.DS_Store
+Thumbs.db
+TestResults/
+Publish/
+*.publishproj

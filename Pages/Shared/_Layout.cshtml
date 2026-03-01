@@ -74,7 +74,7 @@
 
     <footer class="border-top footer text-muted mt-5">
         <div class="container d-flex justify-content-between">
-            <span>&copy; 2026 - ETH Shop</span>
+            <span>&copy; 2026 - Shop</span>
         </div>
     </footer>
 
@@ -83,12 +83,12 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            const htmlElement = document.documentElement;
-            const currentTheme = htmlElement.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            htmlElement.setAttribute('data-bs-theme', newTheme);
-        });
+            document.getElementById('themeToggle').addEventListener('click', () => {
+                const htmlElement = document.documentElement;
+                const currentTheme = htmlElement.getAttribute('data-bs-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                htmlElement.setAttribute('data-bs-theme', newTheme);
+            });
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
