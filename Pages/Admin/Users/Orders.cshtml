@@ -1,0 +1,67 @@
+@page "{userId}"
+@model InternetShop.Pages.Admin.Users.OrdersModel
+@{
+    ViewData["Title"] = "User Orders";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fa-solid fa-boxes-stacked text-info"></i> Orders for @Model.TargetUserEmail</h2>
+        <a asp-page="./Index" class="btn btn-outline-secondary">Back to Users</a>
+    </div>
+
+    @if (!Model.UserOrders.Any())
+    {
+        <div class="alert alert-secondary text-center">
+            This user has not placed any orders.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive shadow-sm">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Total Fiat</th>
+                        <th>Total ETH</th>
+                        <th>Tx Hash</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.UserOrders)
+                    {
+                        <tr>
+                            <td class="fw-bold">@order.Id</td>
+                            <td>@order.OrderDate.ToLocalTime().ToString("g")</td>
+                            <td>
+                                <ul class="list-unstyled mb-0 small">
+                                    @foreach (var item in order.OrderItems)
+                                    {
+                                        <li>@item.Quantity x @(item.Product?.Name ?? "Deleted Product")</li>
+                                    }
+                                </ul>
+                            </td>
+                            <td class="text-success">$@order.TotalPrice.ToString("F2")</td>
+                            <td class="text-primary">@order.TotalEthAmount.ToString("F5")</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(order.TransactionHash))
+                                {
+                                    <a href="https://sepolia.etherscan.io/tx/@order.TransactionHash" target="_blank"
+                                           class="text-decoration-none">
+                                        @order.TransactionHash.Substring(0, 10)... <i
+                                        class="fa-solid fa-external-link-alt small"></i>
+                                    </a>
+                                }
+                            </td>
+                            <td><span class="badge bg-primary">@order.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
