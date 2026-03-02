@@ -15,7 +15,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter(); // dev-only
 
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => {
+builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+{
     options.SignIn.RequireConfirmedAccount = false;
     options.Password.RequireDigit = false;
     options.Password.RequiredLength = 6;
@@ -26,7 +27,13 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => {
 
 builder.Services.AddRazorPages();
 
-builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
+
+builder.Services.AddHttpClient<InternetShop.Services.CoinGeckoService>(client =>
+    {
+        client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    });
 
 var app = builder.Build();
 
@@ -34,7 +41,7 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
-    DbInitializer.Initialize(context); // Initialize Db
+    DbInitializer.Initialize(context);
 }
 
 
@@ -49,7 +56,7 @@ else
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles(); 
+app.UseStaticFiles();
 
 app.UseRouting();
 

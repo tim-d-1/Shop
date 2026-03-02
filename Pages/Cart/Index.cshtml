@@ -82,4 +82,80 @@
             </div>
         </div>
     }
+
+    <form id="checkoutForm" method="post" asp-page="/Cart/Index" asp-page-handler="Checkout">
+        <input type="hidden" id="txHash" name="transactionHash" value="" />
+    </form>
+
+    @section Scripts {
+        <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", async function () {
+            const fiatTotal = @Model.TotalFiatPrice.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            const ethTotalElement = document.getElementById("ethTotal");
+            const checkoutBtn = document.getElementById("btnCheckout");
+
+
+            if (fiatTotal > 0) {
+                try {
+                const response = await fetch('?handler=EthPrice');
+                const data = await response.json();
+                const ethAmount = fiatTotal / data.usdRate;
+
+                ethTotalElement.innerHTML = `${ethAmount.toFixed(5)} ETH <br><small class='text-muted'>(Rate: $${data.usdRate}/ETH)</small>`;
+                checkoutBtn.dataset.ethAmount = ethAmount.toFixed(5);
+                checkoutBtn.disabled = false;
+                checkoutBtn.classList.replace("btn-primary", "btn-success");
+
+                } catch (error) {
+                ethTotalElement.innerText = "Error loading live ETH rate.";
+                console.error(error);
+                }
+            } else {
+                if (ethTotalElement) {
+                    ethTotalElement.innerText = "0.0000 ETH";
+                }
+            }
+
+            checkoutBtn.addEventListener("click", async function () {
+                if (typeof window.ethereum !== 'undefined') {
+                    try {
+                        checkoutBtn.disabled = true;
+                        checkoutBtn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Waiting for MetaMask...";
+
+                        const web3 = new Web3(window.ethereum);
+                        const contractAddress = "@Model.ContractAddress";
+                        const contractABI = @Html.Raw(Model.ContractABI);
+                        const shopContract = new web3.eth.Contract(contractABI, contractAddress);
+
+                        const accounts = await web3.eth.requestAccounts();
+                        const userAddress = accounts[0];
+
+                        const ethAmountToPay = checkoutBtn.dataset.ethAmount;
+                        const weiAmount = web3.utils.toWei(ethAmountToPay, 'ether');
+
+                        const tempOrderId = Date.now();
+
+                        const receipt = await shopContract.methods.payForOrder(tempOrderId).send({
+                        from: userAddress,
+                        value: weiAmount
+                    });
+
+                    document.getElementById("txHash").value = receipt.transactionHash;
+                    document.getElementById("checkoutForm").submit();
+
+                } catch (error) {
+                    console.error("Transaction Error: ", error);
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.innerHTML = "<i class='fa-brands fa-ethereum'></i> Pay with Ethereum";
+                    alert("Contract execution failed or was rejected.");
+                }
+            } else {
+                alert("Please install MetaMask to proceed.");
+            }
+            });
+            });
+        </script>
+    }
 </div>
