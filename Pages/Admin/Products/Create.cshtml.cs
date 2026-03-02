@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace InternetShop.Pages_Admin_Products
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public class CreateModel : PageModel
     {
         private readonly InternetShop.Data.ApplicationDbContext _context;

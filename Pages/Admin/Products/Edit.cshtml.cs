@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace InternetShop.Pages_Admin_Products
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public class EditModel : PageModel
     {
         private readonly InternetShop.Data.ApplicationDbContext _context;
@@ -32,7 +32,7 @@ namespace InternetShop.Pages_Admin_Products
                 return NotFound();
             }
 
-            var product =  await _context.Products.FirstOrDefaultAsync(m => m.Id == id);
+            var product = await _context.Products.FirstOrDefaultAsync(m => m.Id == id);
             if (product == null)
             {
                 return NotFound();

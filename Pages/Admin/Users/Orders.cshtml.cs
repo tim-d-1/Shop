@@ -8,7 +8,7 @@ using InternetShop.Models;
 
 namespace InternetShop.Pages.Admin.Users
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public class OrdersModel : PageModel
     {
         private readonly ApplicationDbContext _context;

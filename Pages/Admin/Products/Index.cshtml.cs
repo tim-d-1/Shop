@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace InternetShop.Pages_Admin_Products
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public class IndexModel : PageModel
     {
         private readonly InternetShop.Data.ApplicationDbContext _context;
@@ -21,7 +21,7 @@ namespace InternetShop.Pages_Admin_Products
             _context = context;
         }
 
-        public IList<Product> Product { get;set; } = default!;
+        public IList<Product> Product { get; set; } = default!;
 
         public async Task OnGetAsync()
         {

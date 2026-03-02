@@ -2,6 +2,7 @@
 
 using InternetShop.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 public static class DbInitializer
 {
@@ -10,7 +11,7 @@ public static class DbInitializer
             UserManager<IdentityUser> userManager,
             RoleManager<IdentityRole> roleManager)
     {
-        context.Database.EnsureCreated();
+        await context.Database.MigrateAsync();
         string[] roleNames = { "SuperAdmin", "Admin", "User" };
 
         foreach (var roleName in roleNames)
@@ -21,7 +22,7 @@ public static class DbInitializer
                 await roleManager.CreateAsync(new IdentityRole(roleName));
             }
         }
-        string superAdminEmail = "name@example.com";
+        string superAdminEmail = "admin@example.com";
         string superAdminPassword = "password1234!";
 
         var superAdminUser = await userManager.FindByEmailAsync(superAdminEmail);
@@ -40,6 +41,18 @@ public static class DbInitializer
             if (createPowerUser.Succeeded)
             {
                 await userManager.AddToRoleAsync(newSuperAdmin, "SuperAdmin");
+            }
+            else
+            {
+                var errorMessages = string.Join(", ", createPowerUser.Errors.Select(e => e.Description));
+                throw new Exception($"Failed to create SuperAdmin. Errors: {errorMessages}");
+            }
+        }
+        else
+        {
+            if (!await userManager.IsInRoleAsync(superAdminUser, "SuperAdmin"))
+            {
+                await userManager.AddToRoleAsync(superAdminUser, "SuperAdmin");
             }
         }
     }

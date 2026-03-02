@@ -45,7 +45,17 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-    DbInitializer.InitializeAsync(context, userManager, roleManager).Wait();
+    try
+    {
+        await DbInitializer.InitializeAsync(context, userManager, roleManager);
+
+    }
+    catch (System.Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+        throw;
+    }
 }
 
 if (app.Environment.IsDevelopment())
