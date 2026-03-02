@@ -1,26 +1,46 @@
 ﻿namespace InternetShop.Data;
 
 using InternetShop.Models;
+using Microsoft.AspNetCore.Identity;
 
 public static class DbInitializer
 {
-    public static void Initialize(ApplicationDbContext context)
+    public static async Task InitializeAsync(
+            ApplicationDbContext context,
+            UserManager<IdentityUser> userManager,
+            RoleManager<IdentityRole> roleManager)
     {
         context.Database.EnsureCreated();
+        string[] roleNames = { "SuperAdmin", "Admin", "User" };
 
-        if (context.Products.Any())
+        foreach (var roleName in roleNames)
         {
-            return;
+            var roleExist = await roleManager.RoleExistsAsync(roleName);
+            if (!roleExist)
+            {
+                await roleManager.CreateAsync(new IdentityRole(roleName));
+            }
         }
+        string superAdminEmail = "name@example.com";
+        string superAdminPassword = "password1234!";
 
-        var products = new Product[]
+        var superAdminUser = await userManager.FindByEmailAsync(superAdminEmail);
+
+        if (superAdminUser == null)
         {
-                new Product { Name = "Ethereum Graphic Tee", Price = 25.00m, Description = "100% Cotton with ETH Logo", StockQuantity = 50 },
-                new Product { Name = "Ledger Nano X", Price = 149.00m, Description = "Hardware wallet for your ETH", StockQuantity = 10 },
-                new Product { Name = "Crypto Mug", Price = 15.00m, Description = "Drink coffee, trade ETH", StockQuantity = 100 }
-        };
+            var newSuperAdmin = new IdentityUser
+            {
+                UserName = superAdminEmail,
+                Email = superAdminEmail,
+                EmailConfirmed = true
+            };
 
-        context.Products.AddRange(products);
-        context.SaveChanges();
+            var createPowerUser = await userManager.CreateAsync(newSuperAdmin, superAdminPassword);
+
+            if (createPowerUser.Succeeded)
+            {
+                await userManager.AddToRoleAsync(newSuperAdmin, "SuperAdmin");
+            }
+        }
     }
 }

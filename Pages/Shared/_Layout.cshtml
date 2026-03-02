@@ -44,22 +44,25 @@
                         </li>
                     }
 
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-warning px-3" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa-solid fa-screwdriver-wrench"></i> Admin Panel
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/Admin/Products">Manage Products</a></li>
-                            <li><a class="dropdown-item" href="/Admin/Orders">Monitor Orders</a></li>
-                        </ul>
-                    </li>
+                    @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-warning px-3" href="#" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-screwdriver-wrench"></i> Admin Panel
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/Admin/Products">Manage Products</a></li>
+                                <li><a class="dropdown-item" href="/Admin/Orders">Monitor Orders</a></li>
+                            </ul>
+                        </li>
+                    }
                 </ul>
 
                 <div class="d-flex align-items-center">
                     <partial name="_LoginPartial" />
 
-                    <button class="btn btn-outline-secondary btn-sm ms-3" id="themeToggle">
+                    <button class="btn btn-outline-info btn-sm ms-3" id="themeToggle">
                         <i class="fa-solid fa-moon"></i> Theme
                     </button>
                 </div>
@@ -89,6 +92,14 @@
         const currentTheme = htmlElement.getAttribute('data-bs-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         htmlElement.setAttribute('data-bs-theme', newTheme);
+        if (newTheme == 'light') {
+        htmlElement.classList.remove("bg-body");
+        htmlElement.classList.add("bg-info");
+        }
+        else {
+        htmlElement.classList.remove("bg-info");
+        htmlElement.classList.add("bg-body");
+        }
         });
     </script>
 
