@@ -81,14 +81,15 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
 
     <script>
-                document.getElementById('themeToggle').addEventListener('click', () => {
-                    const htmlElement = document.documentElement;
-                    const currentTheme = htmlElement.getAttribute('data-bs-theme');
-                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                    htmlElement.setAttribute('data-bs-theme', newTheme);
-                });
+        document.getElementById('themeToggle').addEventListener('click', () => {
+        const htmlElement = document.documentElement;
+        const currentTheme = htmlElement.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        htmlElement.setAttribute('data-bs-theme', newTheme);
+        });
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
