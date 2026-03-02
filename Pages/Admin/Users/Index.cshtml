@@ -1,0 +1,59 @@
+@page
+@model InternetShop.Pages.Admin.Users.IndexModel
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="fa-solid fa-users text-warning"></i> User Management</h2>
+
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Roles</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model.UsersList)
+                {
+                    <tr>
+                        <td class="text-muted small" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@user.Id">
+                            @user.Id
+                        </td>
+                        <td class="fw-bold">@user.Email</td>
+                        <td>
+                            @foreach(var role in user.Roles)
+                            {
+                                <span class="badge @(role == "SuperAdmin" ? "bg-danger" : role == "Admin" ? "bg-warning text-dark" : "bg-secondary") me-1">
+                                    @role
+                                </span>
+                            }
+                            @if(!user.Roles.Any())
+                            {
+                                <span class="badge bg-light text-dark">User</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <a asp-page="./Orders" asp-route-userId="@user.Id" class="btn btn-sm btn-info me-2">
+                                <i class="fa-solid fa-box-open"></i> Orders
+                            </a>
+
+                            @if (!user.Roles.Contains("SuperAdmin") && !user.Roles.Contains("Admin"))
+                            {
+                                <form method="post" asp-page-handler="Promote" asp-route-id="@user.Id" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Promote this user to Admin?');">
+                                        <i class="fa-solid fa-arrow-up"></i> Make Admin
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
