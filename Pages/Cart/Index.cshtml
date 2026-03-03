@@ -41,8 +41,19 @@
                             </td>
                             <td class="fw-bold">@item.Product.Name</td>
                             <td>$@item.Product.Price.ToString("F2")</td>
-                            <td>@item.Quantity</td>
-                            <td class="fw-bold text-success">$@subtotal.ToString("F2")</td>
+                            <td>
+                                <form method="post" asp-page-handler="UpdateQuantity" asp-route-id="@item.Id"
+                                      class="d-flex align-items-center update-qty-form">
+                                    <input type="number" name="quantity" value="@item.Quantity" min="1"
+                                           class="form-control form-control-sm me-2 qty-input" style="width: 75px;"
+                                           data-price="@item.Product.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                           data-id="@item.Id" />
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm" title="Update Quantity">
+                                        <i class="fa-solid fa-arrows-rotate"></i>
+                                    </button>
+                                </form>
+                            </td>
+                            <td class="fw-bold text-success" id="subtotal-@item.Id">$@subtotal.ToString("F2")</td>
                             <td class="text-end">
                                 <form method="post" asp-page-handler="Remove" asp-route-id="@item.Id">
                                     <button type="submit" class="btn btn-outline-danger btn-sm">
@@ -63,8 +74,8 @@
                         <h4 class="card-title">Order Summary</h4>
                         <hr />
                         <div class="d-flex justify-content-between mb-3">
-                            <span class="fs-5">Total (Fiat):</span>
-                            <span class="fs-5 fw-bold text-success">$@Model.TotalFiatPrice.ToString("F2")</span>
+                            <span class="fs-5 fw-bold text-success"
+                                  id="fiatTotalLabel">$@Model.TotalFiatPrice.ToString("F2")</span>
                         </div>
 
                         <div class="d-flex justify-content-between mb-4">
@@ -74,7 +85,7 @@
 
                         <div class="d-grid">
                             <button class="btn btn-primary btn-lg" id="btnCheckout" disabled>
-                                <i class="fa-brands fa-ethereum"></i> Pay with Ethereum
+                                <i class="fa-brands fa-ethereum"></i>    Pay with Ethereum
                             </button>
                         </div>
                     </div>
@@ -91,53 +102,116 @@
         <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
 
         <script>
-            document.addEventListener("DOMContentLoaded", async function () {
-            const fiatTotal = @Model.TotalFiatPrice.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            const ethTotalElement = document.getElementById("ethTotal");
-            const checkoutBtn = document.getElementById("btnCheckout");
+    let cachedEthUsdRate = null;
+    let syncTimeout = null;
 
+    async function calculateAndDisplayEth(fiatAmount) {
+        const ethTotalElement = document.getElementById("ethTotal");
+        const checkoutBtn = document.getElementById("btnCheckout");
 
-            if (fiatTotal > 0) {
-                try {
-                const response = await fetch('?handler=EthPrice');
-                const data = await response.json();
-                const ethAmount = fiatTotal / data.usdRate;
+        if (fiatAmount > 0) {
+            try {
+                if (!cachedEthUsdRate) {
+                    const response = await fetch('?handler=EthPrice');
+                    const data = await response.json();
+                    cachedEthUsdRate = data.usdRate;
+                }
 
-                ethTotalElement.innerHTML = `${ethAmount.toFixed(5)} ETH <br><small class='text-muted'>(Rate: $${data.usdRate}/ETH)</small>`;
+                const ethAmount = fiatAmount / cachedEthUsdRate;
+
+                ethTotalElement.innerHTML = `${ethAmount.toFixed(5)} ETH <br><small class='text-muted'>(Rate: $${cachedEthUsdRate}/ETH)</small>`;
                 checkoutBtn.dataset.ethAmount = ethAmount.toFixed(5);
                 checkoutBtn.disabled = false;
                 checkoutBtn.classList.replace("btn-primary", "btn-success");
-
-                } catch (error) {
+            } catch (error) {
                 ethTotalElement.innerText = "Error loading live ETH rate.";
                 console.error(error);
-                }
-            } else {
-                if (ethTotalElement) {
-                    ethTotalElement.innerText = "0.0000 ETH";
-                }
             }
+        } else {
+            if (ethTotalElement) ethTotalElement.innerText = "0.0000 ETH";
+            checkoutBtn.disabled = true;
+        }
+    }
 
-            checkoutBtn.addEventListener("click", async function () {
-                if (typeof window.ethereum !== 'undefined') {
+    function recalculateCart() {
+        const inputs = document.querySelectorAll('.qty-input');
+        let newTotal = 0;
+
+        inputs.forEach(input => {
+            const qty = parseInt(input.value) || 0;
+            const price = parseFloat(input.dataset.price);
+            const subtotal = qty * price;
+            newTotal += subtotal;
+
+            document.getElementById(`subtotal-${input.dataset.id}`).innerText = `$${subtotal.toFixed(2)}`;
+        });
+
+        document.getElementById('fiatTotalLabel').innerText = `$${newTotal.toFixed(2)}`;
+        calculateAndDisplayEth(newTotal);
+    }
+
+    document.addEventListener("DOMContentLoaded", async function () {
+        let currentFiatTotal = @Model.TotalFiatPrice.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        await calculateAndDisplayEth(currentFiatTotal);
+
+        const qtyInputs = document.querySelectorAll('.qty-input');
+
+        qtyInputs.forEach(input => {
+            input.addEventListener('input', function () {
+                
+                recalculateCart();
+
+                clearTimeout(syncTimeout);
+                syncTimeout = setTimeout(async () => {
+                    const form = this.closest('form');
+                    const formData = new FormData(form);
+
                     try {
-                        checkoutBtn.disabled = true;
-                        checkoutBtn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Waiting for MetaMask...";
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: formData
+                        });
 
-                        const web3 = new Web3(window.ethereum);
-                        const contractAddress = "@Model.ContractAddress";
-                        const contractABI = @Html.Raw(Model.ContractABI);
-                        const shopContract = new web3.eth.Contract(contractABI, contractAddress);
+                        const result = await response.json();
 
-                        const accounts = await web3.eth.requestAccounts();
-                        const userAddress = accounts[0];
+                        if (result.redirect) {
+                            window.location.href = '/Identity/Account/Login';
+                        }
+                        
+                        if (result.success && result.actualQuantity !== parseInt(this.value)) {
+                            this.value = result.actualQuantity;
+                            recalculateCart();
+                        }
+                    } catch (error) {
+                        console.error("Failed to sync quantity:", error);
+                    }
+                }, 500);
+            });
+        });
 
-                        const ethAmountToPay = checkoutBtn.dataset.ethAmount;
-                        const weiAmount = web3.utils.toWei(ethAmountToPay, 'ether');
+        const checkoutBtn = document.getElementById("btnCheckout");
 
-                        const tempOrderId = Date.now();
+        if (checkoutBtn) {
+        checkoutBtn.addEventListener("click", async function () {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    checkoutBtn.disabled = true;
+                    checkoutBtn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Waiting for MetaMask...";
 
-                        const receipt = await shopContract.methods.payForOrder(tempOrderId).send({
+                    const web3 = new Web3(window.ethereum);
+                    const contractAddress = "@Model.ContractAddress";
+                    const contractABI = @Html.Raw(Model.ContractABI);
+                    const shopContract = new web3.eth.Contract(contractABI, contractAddress);
+
+                    const accounts = await web3.eth.requestAccounts();
+                    const userAddress = accounts[0];
+
+                    const ethAmountToPay = checkoutBtn.dataset.ethAmount;
+                    const weiAmount = web3.utils.toWei(ethAmountToPay, 'ether');
+
+                    const tempOrderId = Date.now();
+
+                    const receipt = await shopContract.methods.payForOrder(tempOrderId).send({
                         from: userAddress,
                         value: weiAmount
                     });
@@ -154,8 +228,8 @@
             } else {
                 alert("Please install MetaMask to proceed.");
             }
-            });
-            });
-        </script>
+        });}
+    });
+</script>
     }
 </div>

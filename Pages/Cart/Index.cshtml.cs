@@ -67,7 +67,6 @@ namespace InternetShop.Pages.Cart
 
         public async Task<IActionResult> OnPostCheckoutAsync(string transactionHash)
         {
-            // 1. If the form submitted without a hash, just reload the page
             if (string.IsNullOrEmpty(transactionHash))
             {
                 return RedirectToPage("/Cart/Index");
@@ -76,7 +75,6 @@ namespace InternetShop.Pages.Cart
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
 
-            // 2. Fetch the cart items
             var cartItems = await _context.CartItems
                 .Include(c => c.Product)
                 .Where(c => c.UserId == userId)
@@ -84,12 +82,10 @@ namespace InternetShop.Pages.Cart
 
             if (!cartItems.Any()) return RedirectToPage("/Cart/Index");
 
-            // 3. Calculate final totals for the official receipt
             decimal fiatTotal = cartItems.Sum(item => item.Product!.Price * item.Quantity);
             var currentEthRate = await _coinGeckoService.GetEthToUsdRateAsync();
             decimal ethTotal = fiatTotal / currentEthRate;
 
-            // 4. Create the main Order record
             var newOrder = new Order
             {
                 UserId = userId,
@@ -126,6 +122,45 @@ namespace InternetShop.Pages.Cart
             await _context.SaveChangesAsync();
 
             return RedirectToPage("/Index");
+        }
+
+        public async Task<IActionResult> OnPostUpdateQuantityAsync(int id, int quantity)
+        {
+            if (quantity < 1) return new JsonResult(new { success = false });
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return new JsonResult(new { success = false, redirect = true });
+
+            var cartItems = await _context.CartItems
+                .Include(c => c.Product)
+                .Where(c => c.UserId == userId)
+                .ToListAsync();
+
+            var cartItem = cartItems.FirstOrDefault(c => c.Id == id);
+
+            if (cartItem != null)
+            {
+                if (cartItem.Product != null && quantity > cartItem.Product.StockQuantity)
+                {
+                    cartItem.Quantity = cartItem.Product.StockQuantity;
+                }
+                else
+                {
+                    cartItem.Quantity = quantity;
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            decimal totalFiatPrice = cartItems.Sum(item => item.Product!.Price * item.Quantity);
+            decimal itemSubtotal = cartItem != null ? cartItem.Product!.Price * cartItem.Quantity : 0;
+
+            return new JsonResult(new
+            {
+                success = true,
+                newSubtotal = itemSubtotal,
+                newTotal = totalFiatPrice,
+                actualQuantity = cartItem?.Quantity ?? 0
+            });
         }
     }
 }
