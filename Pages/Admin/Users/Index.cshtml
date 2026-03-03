@@ -38,18 +38,27 @@
                             }
                         </td>
                         <td class="text-end">
+
+                            @if (User.IsInRole("SuperAdmin")) {
+                                @if (!user.Roles.Contains("SuperAdmin") && !user.Roles.Contains("Admin"))
+                                {
+                                    <form method="post" asp-page-handler="Promote" asp-route-id="@user.Id" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Promote this user to Admin?');">
+                                            <i class="fa-solid fa-arrow-up"></i> Make Admin
+                                        </button>
+                                    </form>
+                                } else if (!user.Roles.Contains("SuperAdmin")) {
+                                    <form method="post" asp-page-handler="Demote" asp-route-id="@user.Id" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Demote this Admin to User?');">
+                                            <i class="fa-solid fa-arrow-down"></i> Demote to User
+                                        </button>
+                                    </form>
+                                }
+                            }
+
                             <a asp-page="./Orders" asp-route-userId="@user.Id" class="btn btn-sm btn-info me-2">
                                 <i class="fa-solid fa-box-open"></i> Orders
                             </a>
-
-                            @if (!user.Roles.Contains("SuperAdmin") && !user.Roles.Contains("Admin"))
-                            {
-                                <form method="post" asp-page-handler="Promote" asp-route-id="@user.Id" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Promote this user to Admin?');">
-                                        <i class="fa-solid fa-arrow-up"></i> Make Admin
-                                    </button>
-                                </form>
-                            }
                         </td>
                     </tr>
                 }

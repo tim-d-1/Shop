@@ -1,4 +1,5 @@
 ﻿@page
+@using System.Security.Claims
 @model IndexModel
 @{
     ViewData["Title"] = "Catalog";
@@ -9,6 +10,9 @@
 </div>
 
 <div class="row row-cols-1 row-cols-md-3 g-4">
+    @{
+        bool isLoggedIn = !(User.FindFirstValue(ClaimTypes.NameIdentifier) is null);
+    }
     @foreach (var item in Model.Products)
     {
         <div class="col">
@@ -27,12 +31,22 @@
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-auto">
-
-                        <form method="post" asp-page="/Favorites/Add" asp-route-id="@item.Id" class="d-inline">
-                            <button type="submit" class="btn btn-outline-danger" title="Add to Favorites">
-                                <i class="fa-regular fa-heart"></i>
-                            </button>
-                        </form>
+                        @if (!isLoggedIn || !(await Model.IsInFavorites(item.Id)))
+                        {
+                            <form method="post" asp-page="/Favorites/Add" asp-route-id="@item.Id" class="d-inline">
+                                <button type="submit" class="btn btn-outline-danger" title="Add to Favorites">
+                                    <i class="fa-regular fa-heart"></i>
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form method="post" asp-page="/Favorites/Remove" asp-route-id="@item.Id" class="d-inline">
+                                <button type="submit" class="btn btn-danger" title="Remove from Favorites">
+                                    <i class="fa fa-heart" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                        }
 
                         <form method="post" asp-page="/Cart/Add" asp-route-id="@item.Id" class="flex-grow-1">
                             <button type="submit" class="btn btn-primary w-100">

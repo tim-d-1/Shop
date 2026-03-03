@@ -1,4 +1,7 @@
-﻿namespace InternetShop.Models;
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace InternetShop.Models;
+
 public class OrderItem
 {
     public int Id { get; set; }
@@ -9,5 +12,6 @@ public class OrderItem
     public Product? Product { get; set; }
 
     public int Quantity { get; set; }
+    [Precision(18, 9)]
     public decimal PriceAtPurchase { get; set; }
 }

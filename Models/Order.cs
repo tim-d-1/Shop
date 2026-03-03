@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 namespace InternetShop.Models;
@@ -23,7 +24,9 @@ public class Order
 
     public DateTime OrderDate { get; set; } = DateTime.UtcNow;
 
+    [Precision(18, 4)]
     public decimal TotalPrice { get; set; }
+    [Precision(18, 9)]
     public decimal TotalEthAmount { get; set; }
 
     public string? TransactionHash { get; set; }

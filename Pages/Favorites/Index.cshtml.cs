@@ -32,21 +32,5 @@ namespace InternetShop.Pages.Favorites
                     .ToListAsync();
             }
         }
-
-        public async Task<IActionResult> OnPostRemoveAsync(int id)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            var item = await _context.WishlistItems
-                .FirstOrDefaultAsync(w => w.Id == id && w.UserId == userId);
-
-            if (item != null)
-            {
-                _context.WishlistItems.Remove(item);
-                await _context.SaveChangesAsync();
-            }
-
-            return RedirectToPage();
-        }
     }
 }

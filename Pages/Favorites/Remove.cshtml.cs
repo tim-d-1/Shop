@@ -9,11 +9,11 @@ using System.Security.Claims;
 namespace InternetShop.Pages.Favorites
 {
     [Authorize]
-    public class AddModel : PageModel
+    public class RemoveModel : PageModel
     {
         private readonly ApplicationDbContext _context;
 
-        public AddModel(ApplicationDbContext context)
+        public RemoveModel(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -25,20 +25,12 @@ namespace InternetShop.Pages.Favorites
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
 
-            var product = await _context.Products.FindAsync(id);
-            if (product == null) return NotFound();
-
             var existingItem = await _context.WishlistItems
                 .FirstOrDefaultAsync(w => w.ProductId == id && w.UserId == userId);
 
-            if (existingItem == null)
+            if (existingItem != null)
             {
-                var newItem = new WishlistItem
-                {
-                    UserId = userId,
-                    ProductId = id.Value
-                };
-                _context.WishlistItems.Add(newItem);
+                _context.WishlistItems.Remove(existingItem);
                 await _context.SaveChangesAsync();
             }
 

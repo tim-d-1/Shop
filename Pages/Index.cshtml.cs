@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using InternetShop.Data;
 using InternetShop.Models;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 
 namespace InternetShop.Pages
 {
@@ -22,6 +24,20 @@ namespace InternetShop.Pages
             {
                 Products = await _context.Products.ToListAsync();
             }
+        }
+
+        public async Task<bool> IsInFavorites(int productId)
+        {
+            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId is null) return false;
+
+            var existingItem = await _context.WishlistItems
+                .FirstOrDefaultAsync(w => w.ProductId == productId && w.UserId == userId);
+
+            if (existingItem == null) return false;
+
+            return true;
         }
     }
 }

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InternetShop.Pages.Admin.Users
 {
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public class IndexModel : PageModel
     {
         private readonly UserManager<IdentityUser> _userManager;
@@ -40,7 +40,6 @@ namespace InternetShop.Pages.Admin.Users
                 });
             }
         }
-
         public async Task<IActionResult> OnPostPromoteAsync(string id)
         {
             if (string.IsNullOrEmpty(id)) return NotFound();
@@ -51,6 +50,22 @@ namespace InternetShop.Pages.Admin.Users
                 if (!await _userManager.IsInRoleAsync(user, "Admin"))
                 {
                     await _userManager.AddToRoleAsync(user, "Admin");
+                }
+            }
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDemoteAsync(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return NotFound();
+
+            var admin = await _userManager.FindByIdAsync(id);
+            if (admin != null)
+            {
+                if (await _userManager.IsInRoleAsync(admin, "Admin"))
+                {
+                    await _userManager.RemoveFromRoleAsync(admin, "Admin");
                 }
             }
 

@@ -8,7 +8,10 @@
 <h1>Index</h1>
 
 <p>
-    <a asp-page="Create">Create New</a>
+
+    <button type="submit" class="btn btn-sm btn-success" asp-page="Create">
+        Create New
+    </button>
 </p>
 <table class="table">
     <thead>
@@ -32,29 +35,36 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.Product) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Price)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StockQuantity)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ImageUrl)
-            </td>
-            <td>
-                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model.Product)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Description)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Price)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StockQuantity)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ImageUrl)
+                </td>
+                <td style="white-space: nowrap;">
+                    <button type="submit" class="btn btn-sm btn-warning" asp-page="./Edit" asp-route-id="@item.Id">
+                        Edit
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-info" asp-page="./Details" asp-route-id="@item.Id">
+                        Details
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-danger" asp-page="./Delete" asp-route-id="@item.Id">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

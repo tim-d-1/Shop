@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace InternetShop.Models;
+
 public class Product
 {
     public int Id { get; set; }
@@ -11,10 +13,12 @@ public class Product
 
     public string Description { get; set; } = string.Empty;
 
-    [Range(0.01, 1000000)]
+    [Precision(18, 9)]
     public decimal Price { get; set; }
 
     public int StockQuantity { get; set; }
 
     public string? ImageUrl { get; set; }
+
+    public string Category { get; set; } = "General";
 }
