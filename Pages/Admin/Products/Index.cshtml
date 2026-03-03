@@ -54,15 +54,15 @@
                     @Html.DisplayFor(modelItem => item.ImageUrl)
                 </td>
                 <td style="white-space: nowrap;">
-                    <button type="submit" class="btn btn-sm btn-warning" asp-page="./Edit" asp-route-id="@item.Id">
+                    <a class="btn btn-sm btn-warning" asp-page="./Edit" asp-route-id="@item.Id">
                         Edit
-                    </button>
-                    <button type="submit" class="btn btn-sm btn-info" asp-page="./Details" asp-route-id="@item.Id">
+                    </a>
+                    <a class="btn btn-sm btn-info" asp-page="./Details" asp-route-id="@item.Id">
                         Details
-                    </button>
-                    <button type="submit" class="btn btn-sm btn-danger" asp-page="./Delete" asp-route-id="@item.Id">
+                    </a>
+                    <a class="btn btn-sm btn-danger" asp-page="./Delete" asp-route-id="@item.Id">
                         Delete
-                    </button>
+                    </a>
                 </td>
             </tr>
         }

@@ -5,58 +5,82 @@
     ViewData["Title"] = "Catalog";
 }
 
-<div class="text-center mb-5 mt-4">
-    <h1 class="display-4 fw-bold">Store</h1>
-</div>
+<div class="container mt-4">
+    <h1 class="mb-4">Product Catalog</h1>
+    <form method="get" class="mb-5 p-4">
+        <div class="row g-3">
+            <div class="col-md-5">
+                <input type="text" asp-for="SearchString" class="form-control"
+                       placeholder="Search by product name..." />
+            </div>
+            <div class="col-md-5">
+                <select asp-for="ProductCategory" asp-items="Model.Categories" class="form-select">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-magnifying-glass"></i> Filter
+                </button>
+            </div>
+        </div>
+    </form>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @{
+            bool isLoggedIn = !(User.FindFirstValue(ClaimTypes.NameIdentifier) is null);
+        }
+        @foreach (var item in Model.Products)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm border-secondary">
 
-<div class="row row-cols-1 row-cols-md-3 g-4">
-    @{
-        bool isLoggedIn = !(User.FindFirstValue(ClaimTypes.NameIdentifier) is null);
-    }
-    @foreach (var item in Model.Products)
-    {
-        <div class="col">
-            <div class="card h-100 shadow-sm border-secondary">
+                    <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://placehold.co/600x400/212529/FFFFFF?text=" + item.Name : item.ImageUrl)"
+                         class="card-img-top" alt="@item.Name">
 
-                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://placehold.co/600x400/212529/FFFFFF?text=" + item.Name : item.ImageUrl)"
-                     class="card-img-top" alt="@item.Name">
+                    <div class="card-body d-flex flex-column">
+                        <span class="badge bg-secondary mb-2 align-self-start">@item.Category</span>
+                        <h5 class="card-title fw-bold">@item.Name</h5>
+                        <p class="card-text text-muted flex-grow-1">@item.Description</p>
 
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title fw-bold">@item.Name</h5>
-                    <p class="card-text text-muted flex-grow-1">@item.Description</p>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fs-4 fw-bold text-success">$@item.Price.ToString("F2")</span>
+                            <span class="badge bg-secondary">Stock: @item.StockQuantity</span>
+                        </div>
 
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fs-4 fw-bold text-success">$@item.Price.ToString("F2")</span>
-                        <span class="badge bg-secondary">Stock: @item.StockQuantity</span>
-                    </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-auto">
+                            @if (!isLoggedIn || !(await Model.IsInFavorites(item.Id)))
+                            {
+                                <form method="post" asp-page="/Favorites/Add" asp-route-id="@item.Id" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger" title="Add to Favorites">
+                                        <i class="fa-regular fa-heart"></i>
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form method="post" asp-page="/Favorites/Remove" asp-route-id="@item.Id" class="d-inline"
+                                      asp-route-returnUrl="@HttpContext.Request.Path">
+                                    <button type="submit" class="btn btn-danger" title="Remove from Favorites">
+                                        <i class="fa fa-heart" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            }
 
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-auto">
-                        @if (!isLoggedIn || !(await Model.IsInFavorites(item.Id)))
-                        {
-                            <form method="post" asp-page="/Favorites/Add" asp-route-id="@item.Id" class="d-inline">
-                                <button type="submit" class="btn btn-outline-danger" title="Add to Favorites">
-                                    <i class="fa-regular fa-heart"></i>
+                            <form method="post" asp-page="/Cart/Add" asp-route-id="@item.Id" class="flex-grow-1">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fa-solid fa-cart-plus"></i> Add to Cart
                                 </button>
                             </form>
-                        }
-                        else
-                        {
-                            <form method="post" asp-page="/Favorites/Remove" asp-route-id="@item.Id" class="d-inline">
-                                <button type="submit" class="btn btn-danger" title="Remove from Favorites">
-                                    <i class="fa fa-heart" aria-hidden="true"></i>
-                                </button>
-                            </form>
-                        }
 
-                        <form method="post" asp-page="/Cart/Add" asp-route-id="@item.Id" class="flex-grow-1">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fa-solid fa-cart-plus"></i> Add to Cart
-                            </button>
-                        </form>
-
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    }
-</div>
+        }
+        @if (!Model.Products.Any())
+        {
+            <div class="alert alert-warning text-center mt-4">
+                No products match your search criteria.
+            </div>
+        }
+    </div>

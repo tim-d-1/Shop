@@ -18,7 +18,7 @@ namespace InternetShop.Pages.Favorites
             _context = context;
         }
 
-        public async Task<IActionResult> OnPostAsync(int? id)
+        public async Task<IActionResult> OnPostAsync(int? id, string? returnUrl)
         {
             if (id == null) return NotFound();
 
@@ -32,6 +32,11 @@ namespace InternetShop.Pages.Favorites
             {
                 _context.WishlistItems.Remove(existingItem);
                 await _context.SaveChangesAsync();
+            }
+
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
             }
 
             return RedirectToPage("/Index");

@@ -35,8 +35,9 @@
                             </div>
 
                             <div class="d-flex justify-content-between mt-auto">
-                                <form method="post" asp-page-handler="Remove" asp-route-id="@item.Id">
-                                    <button type="submit" class="btn btn-outline-danger">
+                                <form method="post" asp-page="/Favorites/Remove" asp-route-id="@item.ProductId" class="d-inline"
+                                      asp-route-returnUrl="@HttpContext.Request.Path">
+                                    <button type="submit" class="btn btn-outline-danger" title="Remove from Favorites">
                                         <i class="fa-solid fa-trash"></i> Remove
                                     </button>
                                 </form>

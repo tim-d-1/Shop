@@ -4,6 +4,7 @@ using InternetShop.Data;
 using InternetShop.Models;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace InternetShop.Pages
 {
@@ -18,12 +19,33 @@ namespace InternetShop.Pages
 
         public IList<Product> Products { get; set; } = default!;
 
+        [BindProperty(SupportsGet = true)]
+        public string? SearchString { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? ProductCategory { get; set; }
+
+        public SelectList? Categories { get; set; }
         public async Task OnGetAsync()
         {
-            if (_context.Products != null)
+            IQueryable<string> categoryQuery = from p in _context.Products
+                                               orderby p.Category
+                                               select p.Category;
+            var products = from p in _context.Products
+                           select p;
+
+            if (!string.IsNullOrEmpty(SearchString))
             {
-                Products = await _context.Products.ToListAsync();
+                products = products.Where(s => s.Name.Contains(SearchString));
             }
+
+            if (!string.IsNullOrEmpty(ProductCategory))
+            {
+                products = products.Where(x => x.Category == ProductCategory);
+            }
+
+            Categories = new SelectList(await categoryQuery.Distinct().ToListAsync());
+            Products = await products.ToListAsync();
         }
 
         public async Task<bool> IsInFavorites(int productId)
