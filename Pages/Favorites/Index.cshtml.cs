@@ -8,7 +8,6 @@ using System.Security.Claims;
 
 namespace InternetShop.Pages.Favorites
 {
-    [Authorize]
     public class IndexModel : PageModel
     {
         private readonly ApplicationDbContext _context;
@@ -18,11 +17,20 @@ namespace InternetShop.Pages.Favorites
             _context = context;
         }
 
+        private string GetOrSetGuestId()
+        {
+            if (Request.Cookies.TryGetValue("GuestId", out string? guestId)) return guestId;
+
+            guestId = Guid.NewGuid().ToString();
+            Response.Cookies.Append("GuestId", guestId, new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(30) });
+            return guestId;
+        }
+
         public IList<WishlistItem> WishlistItems { get; set; } = new List<WishlistItem>();
 
         public async Task OnGetAsync()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? GetOrSetGuestId();
 
             if (userId != null)
             {

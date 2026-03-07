@@ -31,24 +31,22 @@
                             <i class="fa fa-table" aria-hidden="true"></i> Catalog</a>
                         </li>
 
-                        @if (SignInManager.IsSignedIn(User))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link px-3" asp-area="" asp-page="/Favorites/Index">
-                                    <i class="fa-regular fa-heart"></i> Favorites
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link px-3" asp-area="" asp-page="/Cart/Index">
-                                    <i class="fa-solid fa-cart-shopping"></i> Cart
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link px-3" asp-area="" asp-page="/Orders/Index">
-                                    <i class="fa-solid fa-box-open"></i> Orders
-                                </a>
-                            </li>
-                        }
+                        <li class="nav-item">
+                            <a class="nav-link px-3" asp-area="" asp-page="/Favorites/Index">
+                                <i class="fa-regular fa-heart"></i> Favorites
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-3" asp-area="" asp-page="/Cart/Index">
+                                <i class="fa-solid fa-cart-shopping"></i> Cart
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-3" asp-area="" asp-page="/Orders/Index">
+                                <i class="fa-solid fa-box-open"></i> Orders
+                            </a>
+                        </li>
+
 
                         @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
                         {
@@ -60,6 +58,7 @@
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="/Admin/Products">Manage Products</a></li>
                                     <li><a class="dropdown-item" href="/Admin/Users">Manage Users</a></li>
+                                    <li><a class="dropdown-item" href="/Admin/Orders">Manage Orders</a></li>
                                 </ul>
                             </li>
                         }

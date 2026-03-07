@@ -10,7 +10,6 @@ using Microsoft.Extensions.Configuration;
 
 namespace InternetShop.Pages.Cart
 {
-    [Authorize]
     public class IndexModel : PageModel
     {
         public string ContractAddress { get; set; } = string.Empty;
@@ -27,12 +26,21 @@ namespace InternetShop.Pages.Cart
             ContractABI = config["EthereumSettings:ContractABI"] ?? "[]";
         }
 
+        private string GetOrSetGuestId()
+        {
+            if (Request.Cookies.TryGetValue("GuestId", out string? guestId)) return guestId;
+
+            guestId = Guid.NewGuid().ToString();
+            Response.Cookies.Append("GuestId", guestId, new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(30) });
+            return guestId;
+        }
+
         public IList<CartItem> CartItems { get; set; } = new List<CartItem>();
         public decimal TotalFiatPrice { get; set; }
 
         public async Task OnGetAsync()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? GetOrSetGuestId();
 
             if (userId != null)
             {
@@ -65,15 +73,14 @@ namespace InternetShop.Pages.Cart
             return new JsonResult(new { usdRate = rate });
         }
 
-        public async Task<IActionResult> OnPostCheckoutAsync(string transactionHash)
+        public async Task<IActionResult> OnPostCheckoutAsync(string transactionHash, string deliveryAddress, string? phoneNumber)
         {
             if (string.IsNullOrEmpty(transactionHash))
             {
                 return RedirectToPage("/Cart/Index");
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? GetOrSetGuestId();
 
             var cartItems = await _context.CartItems
                 .Include(c => c.Product)
@@ -93,7 +100,9 @@ namespace InternetShop.Pages.Cart
                 TotalPrice = fiatTotal,
                 TotalEthAmount = ethTotal,
                 TransactionHash = transactionHash,
-                Status = OrderStatus.Pending
+                Status = OrderStatus.Pending,
+                DeliveryAddress = deliveryAddress,
+                PhoneNumber = phoneNumber
             };
 
             _context.Orders.Add(newOrder);

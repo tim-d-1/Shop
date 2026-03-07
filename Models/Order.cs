@@ -7,8 +7,11 @@ namespace InternetShop.Models;
 public enum OrderStatus
 {
     Pending,
-    Paid,
+    Processing,
     Shipped,
+    InTransit,
+    Delivered,
+    Completed,
     Cancelled
 }
 
@@ -16,9 +19,7 @@ public class Order
 {
     public int Id { get; set; }
 
-    [Required]
-    public string UserId { get; set; } = string.Empty;
-    public IdentityUser? User { get; set; }
+    public required string UserId { get; set; }
 
     public List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
@@ -31,4 +32,7 @@ public class Order
 
     public string? TransactionHash { get; set; }
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
+
+    public string? DeliveryAddress { get; set; }
+    public string? PhoneNumber { get; set; }
 }

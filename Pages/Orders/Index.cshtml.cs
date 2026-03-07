@@ -7,7 +7,6 @@ using System.Security.Claims;
 
 namespace InternetShop.Pages.Orders
 {
-    [Authorize] // Only logged-in users can see their history
     public class IndexModel : PageModel
     {
         private readonly ApplicationDbContext _context;
@@ -17,15 +16,23 @@ namespace InternetShop.Pages.Orders
             _context = context;
         }
 
+        private string GetOrSetGuestId()
+        {
+            if (Request.Cookies.TryGetValue("GuestId", out string? guestId)) return guestId;
+
+            guestId = Guid.NewGuid().ToString();
+            Response.Cookies.Append("GuestId", guestId, new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(30) });
+            return guestId;
+        }
+
         public IList<Order> Orders { get; set; } = new List<Order>();
 
         public async Task OnGetAsync()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? GetOrSetGuestId();
 
             if (userId != null)
             {
-                // Fetch orders, including the nested items and product info, sorted newest first
                 Orders = await _context.Orders
                     .Include(o => o.OrderItems)
                         .ThenInclude(oi => oi.Product)

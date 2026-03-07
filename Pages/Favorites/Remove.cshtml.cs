@@ -8,29 +8,32 @@ using System.Security.Claims;
 
 namespace InternetShop.Pages.Favorites
 {
-    [Authorize]
     public class RemoveModel : PageModel
     {
         private readonly ApplicationDbContext _context;
+        public RemoveModel(ApplicationDbContext context) => _context = context;
 
-        public RemoveModel(ApplicationDbContext context)
+        private string GetOrSetGuestId()
         {
-            _context = context;
+            if (Request.Cookies.TryGetValue("GuestId", out string? guestId)) return guestId;
+            guestId = Guid.NewGuid().ToString();
+            Response.Cookies.Append("GuestId", guestId, new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(30) });
+            return guestId;
         }
 
         public async Task<IActionResult> OnPostAsync(int? id, string? returnUrl)
         {
             if (id == null) return NotFound();
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+            // Support Guest ID
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? GetOrSetGuestId();
 
-            var existingItem = await _context.WishlistItems
+            var item = await _context.WishlistItems
                 .FirstOrDefaultAsync(w => w.ProductId == id && w.UserId == userId);
 
-            if (existingItem != null)
+            if (item != null)
             {
-                _context.WishlistItems.Remove(existingItem);
+                _context.WishlistItems.Remove(item);
                 await _context.SaveChangesAsync();
             }
 

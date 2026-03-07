@@ -1,0 +1,44 @@
+@page
+@using Microsoft.EntityFrameworkCore
+@model InternetShop.Pages.Admin.Orders.IndexModel
+@inject ApplicationDbContext context
+@{ ViewData["Title"] = "Process Orders"; }
+
+<div class="container mt-4">
+    <h2><i class="fa-solid fa-truck-fast text-warning"></i> Process Orders</h2>
+    <table class="table table-hover mt-3 align-middle shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Address</th>
+                <th>Contact</th>
+                <th>Status</th>
+                <th>Update Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Model.AllOrders)
+            {
+                <tr>
+                    <td class="fw-bold">@order.Id</td>
+                    <td>@order.OrderDate.ToLocalTime().ToString("g")</td>
+                    <td>@order.DeliveryAddress</td>
+                    <td>@(string.IsNullOrEmpty(order.PhoneNumber) ? (await context.Users.FirstOrDefaultAsync((IdentityUser u) => u.Id == order.UserId))?.Email  : order.PhoneNumber)</td>
+                    <td><span class="badge bg-info text-dark">@order.Status</span></td>
+                    <td>
+                        <form method="post" asp-page-handler="UpdateStatus" asp-route-orderId="@order.Id" class="d-flex">
+                            <select name="newStatus" class="form-select form-select-sm me-2">
+                                @foreach (var status in Enum.GetValues(typeof(InternetShop.Models.OrderStatus)))
+                                {
+                                    <option value="@status" selected="@(order.Status.ToString() == status.ToString())">@status</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

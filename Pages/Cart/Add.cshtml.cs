@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace InternetShop.Pages.Cart
 {
-    [Authorize]
+
     public class AddModel : PageModel
     {
         private readonly ApplicationDbContext _context;
@@ -18,6 +18,15 @@ namespace InternetShop.Pages.Cart
             _context = context;
         }
 
+        private string GetOrSetGuestId()
+        {
+            if (Request.Cookies.TryGetValue("GuestId", out string? guestId)) return guestId;
+            
+            guestId = Guid.NewGuid().ToString();
+            Response.Cookies.Append("GuestId", guestId, new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(30) });
+            return guestId;
+        }
+
         public async Task<IActionResult> OnPostAsync(int? id)
         {
             if (id == null)
@@ -25,7 +34,9 @@ namespace InternetShop.Pages.Cart
                 return NotFound();
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? GetOrSetGuestId();
+
+            var cartItem = await _context.CartItems.FirstOrDefaultAsync(c => c.ProductId == id && c.UserId == userId);
 
             if (userId == null)
             {
@@ -58,7 +69,7 @@ namespace InternetShop.Pages.Cart
 
             await _context.SaveChangesAsync();
 
-            return RedirectToPage("/Cart/Index");
+            return new JsonResult(new { success = true });
         }
     }
 }
