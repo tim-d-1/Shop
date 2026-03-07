@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
+using InternetShop.Data;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,10 +16,12 @@ namespace InternetShop.Pages_Admin_Products
     public class CreateModel : PageModel
     {
         private readonly InternetShop.Data.ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public CreateModel(InternetShop.Data.ApplicationDbContext context)
+        public CreateModel(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public IActionResult OnGet()
@@ -29,12 +32,30 @@ namespace InternetShop.Pages_Admin_Products
         [BindProperty]
         public Product Product { get; set; } = default!;
 
-        // For more information, see https://aka.ms/RazorPagesCRUD.
+        [BindProperty]
+        public IFormFile? UploadedImage { get; set; }
+
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
             {
                 return Page();
+            }
+
+            if (UploadedImage != null)
+            {
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+                Directory.CreateDirectory(uploadsFolder);
+
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + UploadedImage.FileName;
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await UploadedImage.CopyToAsync(fileStream);
+                }
+
+                Product.ImageUrl = "/images/products/" + uniqueFileName;
             }
 
             _context.Products.Add(Product);
@@ -44,3 +65,4 @@ namespace InternetShop.Pages_Admin_Products
         }
     }
 }
+

@@ -16,14 +16,19 @@ namespace InternetShop.Pages_Admin_Products
     public class EditModel : PageModel
     {
         private readonly InternetShop.Data.ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public EditModel(InternetShop.Data.ApplicationDbContext context)
+        public EditModel(InternetShop.Data.ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         [BindProperty]
         public Product Product { get; set; } = default!;
+
+        [BindProperty]
+        public IFormFile? UploadedImage { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -41,8 +46,6 @@ namespace InternetShop.Pages_Admin_Products
             return Page();
         }
 
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more information, see https://aka.ms/RazorPagesCRUD.
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
@@ -50,27 +53,36 @@ namespace InternetShop.Pages_Admin_Products
                 return Page();
             }
 
-            _context.Attach(Product).State = EntityState.Modified;
+            var productToUpdate = await _context.Products.FindAsync(Product.Id);
+            if (productToUpdate == null) return NotFound();
 
-            try
+            if (UploadedImage != null)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductExists(Product.Id))
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+                Directory.CreateDirectory(uploadsFolder);
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + UploadedImage.FileName;
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
                 {
-                    return NotFound();
+                    await UploadedImage.CopyToAsync(fileStream);
                 }
-                else
-                {
-                    throw;
-                }
+
+                // Optional: Delete the old image file here if you want to save space
+
+                productToUpdate.ImageUrl = "/images/products/" + uniqueFileName;
             }
+
+            // Update other properties
+            productToUpdate.Name = Product.Name;
+            productToUpdate.Description = Product.Description;
+            productToUpdate.Price = Product.Price;
+            productToUpdate.StockQuantity = Product.StockQuantity;
+
+            await _context.SaveChangesAsync();
 
             return RedirectToPage("./Index");
         }
-
         private bool ProductExists(int id)
         {
             return _context.Products.Any(e => e.Id == id);

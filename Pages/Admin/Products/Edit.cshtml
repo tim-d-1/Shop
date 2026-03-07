@@ -11,9 +11,30 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Product.Id" />
+            <div class="form-group mb-3">
+                <label class="control-label">Product Image</label>
+
+                @if (!string.IsNullOrEmpty(Model.Product?.ImageUrl))
+                {
+                    <div class="mb-2">
+                        <img src="@Model.Product.ImageUrl" alt="Current Image"
+                             style="max-height: 100px; border-radius: 5px;" />
+                        <small class="text-muted d-block">Current Image</small>
+                    </div>
+                }
+
+                <div id="drop-zone" class="p-4 text-center border rounded"
+                     style="border: 2px dashed #ccc !important; cursor: pointer; transition: background 0.2s;">
+                    <i class="fa-solid fa-cloud-arrow-up fs-2 text-primary mb-2"></i>
+                    <p class="mb-0" id="file-name-display">Drag & drop an image here or click to select</p>
+                    <input type="file" id="file-input" name="UploadedImage" class="d-none" accept="image/*" />
+                </div>
+
+                <input type="hidden" asp-for="Product.ImageUrl" />
+            </div>
             <div class="form-group">
                 <span class="text-danger">*</span>
                 <label asp-for="Product.Name" class="control-label"></label>
@@ -21,25 +42,25 @@
                 <span asp-validation-for="Product.Name" class="text-danger"></span>
             </div>
             <div class="form-group">
-                
+
                 <label asp-for="Product.Description" class="control-label"></label>
                 <input asp-for="Product.Description" class="form-control" />
                 <span asp-validation-for="Product.Description" class="text-danger"></span>
             </div>
             <div class="form-group">
-                
+
                 <label asp-for="Product.Price" class="control-label"></label>
                 <input asp-for="Product.Price" class="form-control" />
                 <span asp-validation-for="Product.Price" class="text-danger"></span>
             </div>
             <div class="form-group">
-                
+
                 <label asp-for="Product.StockQuantity" class="control-label"></label>
                 <input asp-for="Product.StockQuantity" class="form-control" />
                 <span asp-validation-for="Product.StockQuantity" class="text-danger"></span>
             </div>
             <div class="form-group">
-                
+
                 <label asp-for="Product.ImageUrl" class="control-label"></label>
                 <input asp-for="Product.ImageUrl" class="form-control" />
                 <span asp-validation-for="Product.ImageUrl" class="text-danger"></span>
@@ -57,4 +78,43 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileNameDisplay = document.getElementById('file-name-display');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+            dropZone.style.borderColor = '#0d6efd';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.backgroundColor = 'transparent';
+            dropZone.style.borderColor = '#ccc';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.backgroundColor = 'transparent';
+            dropZone.style.borderColor = '#ccc';
+
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                updateFileNameDisplay();
+            }
+        });
+
+        fileInput.addEventListener('change', updateFileNameDisplay);
+
+        function updateFileNameDisplay() {
+            if (fileInput.files.length > 0) {
+                fileNameDisplay.innerHTML = `<strong>Selected:</strong> ${fileInput.files[0].name}`;
+                fileNameDisplay.classList.add('text-success');
+            }
+        }
+    </script>
 }
