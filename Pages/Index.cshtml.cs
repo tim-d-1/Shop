@@ -48,9 +48,18 @@ namespace InternetShop.Pages
             Products = await products.ToListAsync();
         }
 
+        private string GetOrSetGuestId()
+        {
+            if (Request.Cookies.TryGetValue("GuestId", out string? guestId)) return guestId;
+
+            guestId = Guid.NewGuid().ToString();
+            Response.Cookies.Append("GuestId", guestId, new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(30) });
+            return guestId;
+        }
+
         public async Task<bool> IsInFavorites(int productId)
         {
-            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? GetOrSetGuestId();
 
             if (userId is null) return false;
 

@@ -21,7 +21,7 @@ namespace InternetShop.Pages.Cart
         private string GetOrSetGuestId()
         {
             if (Request.Cookies.TryGetValue("GuestId", out string? guestId)) return guestId;
-            
+
             guestId = Guid.NewGuid().ToString();
             Response.Cookies.Append("GuestId", guestId, new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(30) });
             return guestId;

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +5,6 @@ using InternetShop.Data;
 using InternetShop.Services;
 using InternetShop.Models;
 using System.Security.Claims;
-using Microsoft.Extensions.Configuration;
 
 namespace InternetShop.Pages.Cart
 {
@@ -21,40 +19,35 @@ namespace InternetShop.Pages.Cart
         {
             _context = context;
             _coinGeckoService = coinGeckoService;
-
             ContractAddress = config["EthereumSettings:ContractAddress"] ?? "";
             ContractABI = config["EthereumSettings:ContractABI"] ?? "[]";
         }
 
+        public IList<CartItem> CartItems { get; set; } = new List<CartItem>();
+        public decimal TotalFiatPrice { get; set; }
         private string GetOrSetGuestId()
         {
             if (Request.Cookies.TryGetValue("GuestId", out string? guestId)) return guestId;
-
             guestId = Guid.NewGuid().ToString();
             Response.Cookies.Append("GuestId", guestId, new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(30) });
             return guestId;
         }
 
-        public IList<CartItem> CartItems { get; set; } = new List<CartItem>();
-        public decimal TotalFiatPrice { get; set; }
-
         public async Task OnGetAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? GetOrSetGuestId();
 
-            if (userId != null)
-            {
-                CartItems = await _context.CartItems
-                    .Include(c => c.Product)
-                    .Where(c => c.UserId == userId)
-                    .ToListAsync();
+            CartItems = await _context.CartItems
+                .Include(c => c.Product)
+                .Where(c => c.UserId == userId)
+                .ToListAsync();
 
-                TotalFiatPrice = CartItems.Sum(item => item.Product!.Price * item.Quantity);
-            }
+            TotalFiatPrice = CartItems.Sum(item => item.Product!.Price * item.Quantity);
         }
+
         public async Task<IActionResult> OnPostRemoveAsync(int id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? GetOrSetGuestId();
             var cartItem = await _context.CartItems
                 .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
 
@@ -75,10 +68,7 @@ namespace InternetShop.Pages.Cart
 
         public async Task<IActionResult> OnPostCheckoutAsync(string transactionHash, string deliveryAddress, string? phoneNumber)
         {
-            if (string.IsNullOrEmpty(transactionHash))
-            {
-                return RedirectToPage("/Cart/Index");
-            }
+            if (string.IsNullOrEmpty(transactionHash)) return RedirectToPage("/Cart/Index");
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? GetOrSetGuestId();
 
@@ -119,7 +109,6 @@ namespace InternetShop.Pages.Cart
                 };
                 _context.OrderItems.Add(orderItem);
 
-
                 if (item.Product != null)
                 {
                     item.Product.StockQuantity -= item.Quantity;
@@ -127,18 +116,16 @@ namespace InternetShop.Pages.Cart
             }
 
             _context.CartItems.RemoveRange(cartItems);
-
             await _context.SaveChangesAsync();
 
             return RedirectToPage("/Index");
         }
 
-        public async Task<IActionResult> OnPostUpdateQuantityAsync(int id, int quantity)
+        public async Task<IActionResult> OnPostUpdateQuantityAsync(int id, [FromForm] int quantity)
         {
             if (quantity < 1) return new JsonResult(new { success = false });
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return new JsonResult(new { success = false, redirect = true });
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? GetOrSetGuestId();
 
             var cartItems = await _context.CartItems
                 .Include(c => c.Product)

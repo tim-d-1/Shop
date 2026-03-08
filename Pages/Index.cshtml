@@ -48,7 +48,7 @@
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-auto">
-                            @if (!isLoggedIn || !(await Model.IsInFavorites(item.Id)))
+                            @if (!(await Model.IsInFavorites(item.Id)))
                             {
                                 <form method="post" asp-page="/Favorites/Add" asp-route-id="@item.Id" class="ajax-add-form">
                                     <button type="submit" class="btn btn-outline-danger" title="Add to Favorites">
